@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: freshrss-auto-refresh
+  name: freshrss-refresh-feeds
 spec:
   schedule: "*/20 * * * *"
   jobTemplate:
@@ -20,8 +20,11 @@ spec:
             volumeMounts:
             - name: freshrss-data
               mountPath: /var/www/FreshRSS/data
+            resources:
+                {{- toYaml .Values.resourcesJobs | nindent 16 }}
             command:
             - php
             - -f
             - /var/www/FreshRSS/app/actualize_script.php
+          restartPolicy: Never
 {{- end }}
