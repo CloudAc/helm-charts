@@ -1,0 +1,30 @@
+{{- if .Values.persistence.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: freshrss-refresh-feeds
+spec:
+  schedule: "*/20 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: freshrss-data
+            persistentVolumeClaim:
+              claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "freshrss.fullname" . }}-freshrss{{- end }}
+          containers:
+          - name: freshrss-auto-refresh
+            image:  freshrss/freshrss
+            imagePullPolicy: IfNotPresent
+            volumeMounts:
+            - name: freshrss-data
+              mountPath: /var/www/FreshRSS/data
+            resources:
+                {{- toYaml .Values.resourcesJobs | nindent 16 }}
+            command:
+            - php
+            - -f
+            - /var/www/FreshRSS/app/actualize_script.php
+          restartPolicy: Never
+{{- end }}
